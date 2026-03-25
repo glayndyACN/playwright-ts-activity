@@ -1,44 +1,43 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.only('Playwright Activity - Bea', async ({ page }) => {
-  await page.goto('http://localhost:4200/');
+test.beforeEach(async ({ page }) => {
+    await page.goto("http://localhost:4200/");
+    await page.getByText("Forms").click();
+    await page.getByText("Form Layouts").click();
+});
 
-  await page.locator('input[placeholder="Jane Doe"]').fill('Jane Doe');
-  await page.locator('button.appearance-filled').click();
+test('Playwright Activity - Bea', async ({ page }) => {
+    // 1. Locator Syntax Rules
+    await page.locator('input[placeholder="Jane Doe"]').fill('Jane Doe'); // Locate by tag and placeholder
+    await page.locator('nb-card', { hasText: "Inline form" }).locator('button.appearance-filled:has-text("Submit")').click(); // Click SUBMIT by text and class
 
-  const forms = page.locator('form');
+    // 2. User-Facing Locators
+    const usingGridForm = page.locator('nb-card', { hasText: "Using the Grid" });
+    await usingGridForm.getByRole('textbox', { name: "Email" }).fill('bea@accenture.com');
+    await usingGridForm.getByRole('textbox', { name: "Password" }).fill('123456567');
+    
+    await page.locator('nb-card', { hasText: "Block form" }).getByPlaceholder('First Name').fill('Chai');
+    await page.locator('nb-card', { hasText: "Form without labels" }).getByText('Send').click();
 
-  const usingTheGridForm = forms.nth(1);
-  await usingTheGridForm.locator('input').nth(0).fill('bea@example.com');
-  await usingTheGridForm.locator('input').nth(1).fill('Password123');
+    // 3. Locating Child Elements
+    await usingGridForm.getByRole('radio', { name: 'Option 2' }).click({ force: true });
+    await page.locator('nb-card', { hasText: "Horizontal form" }).getByRole('button', { name: "Sign in" }).click();
 
-  const basicFormCard = forms.nth(2);
-  await basicFormCard.locator('input[type="checkbox"]').check();
+    // 4. Locating Parent Elements & 5. Reuse Locators
+    const basicFormCard = page.locator('nb-card', { hasText: "Basic form" });
+    const emailField = basicFormCard.getByRole('textbox', { name: "Email address" });
+    const passwordField = basicFormCard.getByRole('textbox', { name: "Password" });
+    const submitBtn = basicFormCard.getByRole('button', { name: "Submit" });
 
-  const blockForm = forms.nth(3);
-  await blockForm.getByPlaceholder('First Name').fill('Bea');
+    await emailField.fill('mark@tahimik.com');
+    await passwordField.fill('143526@!');
+    await submitBtn.click();
 
-  await forms.nth(4).getByText('Send').click();
+    await emailField.fill('asasafggfg@fed.com');
+    await passwordField.fill('yusdsada12345!');
+    await submitBtn.click();
 
-  
-  await usingTheGridForm.locator('input[type="radio"]').nth(1).check();
-  await forms.nth(5).getByRole('button', { name: 'Sign in' }).click();
-
-  
-  await basicFormCard.locator('input').nth(0).fill('bea1@email.com');
-  await basicFormCard.locator('input').nth(1).fill('Pass1234');
-  await basicFormCard.getByRole('button', { name: 'Submit' }).click();
-
-  // 5. Reuse Locators
-  const emailField = basicFormCard.locator('input').nth(0);
-  const passwordField = basicFormCard.locator('input').nth(1);
-  const submitButton = basicFormCard.getByRole('button', { name: 'Submit' });
-
-  await emailField.fill('bea2@email.com');
-  await passwordField.fill('SecondPass123');
-  await submitButton.click();
-
-  await emailField.fill('bea3@email.com');
-  await passwordField.fill('ThirdPass123');
-  await submitButton.click();
+    await emailField.fill('youtube@fb.com');
+    await passwordField.fill('qwerty1234@');
+    await submitBtn.click();
 });
